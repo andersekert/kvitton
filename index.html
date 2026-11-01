@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kvitton">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme:light)">
+  <meta name="theme-color" content="#111111" media="(prefers-color-scheme:dark)">
+  <meta name="description" content="Skanna kvitton från resor, läs av summan och dela dem som namngivna PDF:er.">
+  <meta name="robots" content="noindex">
+  <title>Kvitton</title>
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="/profil/v1.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="vendor/tesseract.min.js" defer></script>
+  <script src="vendor/pdf.min.js" defer></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+  <input id="scan-input" type="file" accept="image/*" capture="environment" hidden>
+  <input id="import-input" type="file" accept="application/pdf,image/*" multiple hidden>
+  <input id="page-input" type="file" accept="image/*" capture="environment" hidden>
+
+  <dialog id="trip-dialog">
+    <form method="dialog" class="k-stack">
+      <h2>Ny resa</h2>
+      <input type="hidden" name="id">
+      <div class="e-field">
+        <label for="trip-name">Namn</label>
+        <input id="trip-name" name="name" required maxlength="60" placeholder="Till exempel Oslo oktober">
+      </div>
+      <fieldset class="k-choice">
+        <legend>Typ av resa</legend>
+        <label><input type="radio" name="kind" value="inrikes" checked><span>Inrikes</span></label>
+        <label><input type="radio" name="kind" value="utrikes"><span>Utrikes</span></label>
+      </fieldset>
+      <div class="e-field currency-field" hidden>
+        <label for="trip-currency">Valuta i landet</label>
+        <select id="trip-currency" name="currency"></select>
+        <p class="e-muted k-small">Används när kvittot inte visar någon valuta, och när det bara står "kr".</p>
+      </div>
+      <div class="k-dialog-actions">
+        <button type="button" class="k-link k-danger" data-action="delete-trip" hidden>Radera</button>
+        <span class="k-spacer"></span>
+        <button type="button" class="k-secondary" data-action="close-dialog">Avbryt</button>
+        <button type="submit" class="e-button">Spara</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form method="dialog" class="k-stack">
+      <h2>Inställningar</h2>
+      <div class="e-field">
+        <label for="template">Filnamn</label>
+        <input id="template" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <p class="e-muted k-small">Du kan använda {datum}, {butik}, {belopp}, {valuta}, {resa} och {typ}.</p>
+      </div>
+      <p class="e-muted k-small k-file-name"></p>
+      <p class="e-muted k-small">Kvittona sparas bara i den här webbläsaren på den här telefonen. De lämnar telefonen först när du delar dem.
+        Rensar du webbplatsdata i Safari försvinner de, så dela kvittona innan du gör det.</p>
+      <div class="k-dialog-actions">
+        <span class="k-spacer"></span>
+        <button type="button" class="k-secondary" data-action="close-dialog">Avbryt</button>
+        <button type="button" class="e-button" data-action="save-settings">Spara</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="crop-dialog" aria-label="Justera beskärning">
+    <div class="k-crop-area">
+      <div class="k-crop-stage" tabindex="-1" autofocus>
+        <svg viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true">
+          <polygon class="k-crop-under"></polygon>
+          <polygon class="k-crop-over"></polygon>
+        </svg>
+        <button type="button" class="k-crop-handle" aria-label="Hörn uppe till vänster"></button>
+        <button type="button" class="k-crop-handle" aria-label="Hörn uppe till höger"></button>
+        <button type="button" class="k-crop-handle" aria-label="Hörn nere till höger"></button>
+        <button type="button" class="k-crop-handle" aria-label="Hörn nere till vänster"></button>
+      </div>
+    </div>
+    <div class="k-crop-bar">
+      <p class="k-warning k-crop-message" role="status" hidden>Hörnen går inte att använda. Dra dem till kvittots fyra hörn.</p>
+      <div class="k-tools">
+        <button type="button" class="k-link" data-crop="turn">Vrid</button>
+        <button type="button" class="k-link" data-crop="whole">Hela bilden</button>
+      </div>
+      <div class="k-button-row">
+        <button type="button" class="k-secondary" data-crop="cancel">Avbryt</button>
+        <button type="button" class="e-button" data-crop="save">Spara</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="toast" role="status" hidden></div>
+</body>
+</html>
